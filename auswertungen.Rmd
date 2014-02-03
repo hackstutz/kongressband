@@ -365,3 +365,4 @@ summary(fit.full)
 
 # Vermögen
 
+# Gemeinderanking und Map
