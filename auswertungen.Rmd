@@ -1,0 +1,367 @@
+% Entwicklung der Ungleichheit in der Schweiz - Kongressbandbeitrag zum SGS Kongress 2013
+% Oliver Hümbelin, Berner Fachhochschule <br />Rudi Farys, Universität Bern
+% 28. Februar 2014
+
+```{r options, results='hide',echo=FALSE}
+library(knitr)
+opts_chunk$set(out.width = '800px', dev='svg', out.height = '500px',fig.width=10,fig.height=6.25,cache=TRUE, echo=FALSE, warning=FALSE)
+```
+
+
+```{r datenaufbereitung, echo=FALSE, results='hide',warning=FALSE,}
+library(plm)
+library(foreign)
+library(ggplot2)
+
+# Daten auf Gemeindeebene
+daten <- read.dta("data/kontextvariablen0.02_20130614.dta")
+
+cpi <- read.csv('http://www.quandl.com/api/v1/datasets/WORLDBANK/CHE_FP_CPI_TOTL_ZG.csv?&trim_start=1961-12-31&trim_end=2011-12-31&sort_order=desc', colClasses=c('Date'='Date'))
+cpi$year <- as.numeric(substr(as.character(cpi$Date),1,4))
+cpi <- cpi[order(cpi$year),]
+cpi$cumInf <- cumprod(1+cpi$Value/100)
+# Referenzzeitpunkt 2009 (für die Interpretation der y-Skalen)
+referenz09 <- cpi$cumInf[cpi$year==2009]
+
+daten$kj <- paste(daten$Kantonname, daten$Jahr)
+daten$bev <- daten$frau_ausl+daten$frau_schw+daten$mann_schw+daten$mann_ausl
+kbev<-aggregate(bev~Kantonname+Jahr, data=daten,FUN="sum")
+kbev$kj <- paste(kbev$Kantonname, kbev$Jahr)
+daten$kanton_bev<-kbev[match(daten$kj,kbev$kj),"bev"]
+  
+daten <- within(daten, {
+  cumInf <- cpi[match(Jahr, cpi$year),"cumInf"]/referenz09
+  real_mean_reink <- mean_reink / cumInf
+  real_median_reink <- median_reink / cumInf
+  real_mean_steink <- mean_steink / cumInf
+  real_median_steink <- median_steink / cumInf
+  real_mean_reinka <- mean_reinka / cumInf
+  real_median_reinka <- median_reinka / cumInf
+  real_mean_steinka <- mean_steinka / cumInf
+  real_median_steinka <- median_steinka / cumInf
+  bev <- frau_ausl+frau_schw+mann_schw+mann_ausl
+  ausl <- (frau_ausl+mann_ausl)/bev
+  maenner <- (mann_ausl+mann_schw)/bev
+  primp <- prim/bev
+  sekp <- sek/bev
+  tertp <- tert/bev
+  bild <- (bildungsausgaben/kanton_bev)/cumInf
+  uni <- (bachelor+master+diplom+bachelor_fh+master_fh+diplom_fh)/kanton_bev
+})
+#
+
+```
+
+```{r qplot, warning=FALSE,eval=FALSE,echo=FALSE}
+qplot(Jahr,bild,data=daten[daten$Jahr>1990,],geom="line")+facet_wrap(~Kantonname,ncol=7)+ggtitle("Bildungsausgaben pro Kopf nach Kantonen\nPreisnveau 2009")+scale_colour_grey()+theme_bw()
+# Ausgaben müsste man noch inflationsbereinigen
+qplot(Jahr,uni,data=daten[daten$Jahr>1999,],geom="line")+facet_wrap(~Kantonname,ncol=7)+ggtitle("Hochschulabschlüsse pro Kopf und Jahr nach Kantonen")+scale_colour_grey()+theme_bw()
+```
+
+
+
+<!---
+### Versuch, die Kantone in 3-4 Typen einteilen, je nach Entwicklung der Ungleichheit/Einkommen (unfertig)
+-->
+
+```{r typologisierung_aufbereitung,,echo=FALSE,results='hide'}
+# Daten auf Kantonsebene (ESTV-Daten)
+kdaten <- read.dta("data/ginis_und_perzentile20140120.dta")
+
+# Erstellen einer Variable über die gematcht werden kann
+kdaten$steuerperiode<-floor(kdaten$steuerperiode)
+kdaten$kj<-paste(kdaten$kanton, kdaten$steuerperiode)
+kdaten$kanton_bev <- daten[match(kdaten$kj,daten$kj),"kanton_bev"]
+
+kdaten <- within(kdaten, {
+  cumInf <- cpi[match(steuerperiode, cpi$year),"cumInf"]/referenz09
+  real_mean_steink <- mean / cumInf
+  real_median_steink <- p50 / cumInf
+})
+
+#  zwei Zeitpunkte Daten
+daten2009 <- subset(kdaten, steuerperiode==2009,select=c("kanton","real_mean_steink","real_median_steink","G_steink","steuerperiode","p5","p10","p20","p25","p30","p40","p50","p60","p70","p75","p80","p90","p95","p99","cumInf"))
+daten1979 <- subset(kdaten, steuerperiode==1979,select=c("kanton","real_mean_steink","real_median_steink","G_steink","steuerperiode","p5","p10","p20","p25","p30","p40","p50","p60","p70","p75","p80","p90","p95","p99","cumInf"))
+
+# die perzentile inflationsbereinigen
+daten2009[,6:19]<-daten2009[,6:19]/daten2009$cumInf
+daten1979[,6:19]<-daten1979[,6:19]/daten1979$cumInf
+
+diffdaten <- cbind(daten2009[,c("kanton","steuerperiode")],daten2009[,c(2:4,6:19)]-daten1979[,c(2:4,6:19)])
+# in logdiffdaten sind noch 0->Inf, braucht ggf eine Lösung
+logdiffdaten <- cbind(daten2009[,c("kanton","steuerperiode")],log(daten2009[,c(2:4,6:19)])-log(daten1979[,c(2:4,6:19)]))
+```
+
+# Change in Gini (taxable income) 1979 to 2009
+
+```{r typoranking, dev='svg', echo=FALSE}
+rankdata <- daten1979
+rankdata$G_steink09 <- daten2009$G_steink[match(rankdata$kanton,daten2009$kanton)]
+rankdata <- rankdata[order(rankdata$G_steink),]
+rankdata$change <- ifelse(rankdata$G_steink09<rankdata$G_steink,"down","up")
+ggplot(data=rankdata, aes(y=G_steink,ymin=G_steink, ymax=G_steink09, x = reorder(kanton,G_steink),color=change)) + geom_pointrange(size=1) + scale_x_discrete('') + scale_y_continuous('Change in Gini 1979 to 2009') + theme_bw()+scale_colour_grey()
+```
+
+verschiedene Typen von Kantonen:
+
+* SZ, AI (Zunahme der Ungleichheit ausgehend von einem niedrigen Niveau)
+* ZG, NW, GE (Zunahme der Ungleichheit ausgehend von einem hohen Niveau)
+* AG, SH, FR, SG, NE, LU (stabile Ungleichheit auf niedrigem Niveau)
+* ZH, TI (stabile Ungleichheit auf hohem Niveau)
+* BE, UR, SO (abnehmende Ungleichheit)
+
+# Sample ziehen (für die Kongressfolien; für den Kongressband alle Kantone?)
+```{r subsampling,, echo=FALSE}
+#fulldaten <- daten
+#daten <- daten[!is.na(match(daten$Kantonname,c("SZ","GE","ZH","FR","BE"))),]
+#kdaten <- kdaten[!is.na(match(kdaten$Kantonname,c("SZ","GE","ZH","FR","BE"))),]
+#fulldiffdaten <-logdiffdaten
+#logdiffdaten <- logdiffdaten[!is.na(match(logdiffdaten$Kantonname,c("SZ","GE","ZH","FR","BE"))),]
+```
+
+
+<!---
+# Ungleichheitsniveau versus Veränderung der Ungleichheit von 1979-2009
+-->
+
+```{r typocolor,, echo=FALSE,eval=FALSE}
+qplot(G_steink,G_steink09-G_steink, data=rankdata,geom="text",label=kanton,color=change) + geom_vline(xintercept=median(rankdata$G_steink), linetype="dashed") + geom_hline(yintercept=median(rankdata$G_steink09-rankdata$G_steink), linetype="dotted")+ geom_hline(yintercept=0, linetype="dashed") + theme_bw() + scale_colour_grey()
+```
+
+# Veränderung des durchschnittlichen steuerbaren Einkommens nach Kantonen (preisbereinigt auf 2009er Niveau)
+
+```{r mean_over_time,echo=FALSE}
+ggplot(kdaten, aes(x=steuerperiode,y=real_mean_steink))+geom_line(size=1)+facet_wrap(~kanton,ncol=7)+theme_bw()+scale_colour_grey()
+```
+
+# Veränderung des Gini-Koeffizienten (steuerbares Einkommen) nach Kantonen
+
+```{r gini_over_time, , echo=FALSE}
+ggplot(kdaten, aes(x=steuerperiode,y=G_steink))+geom_line(size=1)+facet_wrap(~kanton,ncol=7)+theme_bw()+scale_colour_grey()
+```
+
+
+<!---
+### Tabelle der Typen und Makrovariablenausprägungen: (unfertig, sieht aus, als käme nichts raus)
+
+* Steuerprogression
+* Demographie
+* Sprachregion
+* Zentrum/Peripherie
+* Wirtschaftsstruktur
+-->
+
+<!---
+## Entwicklung der Ungleichheit zwischen Kantonen
+
+
+### Theil berechnen 
+
+Brauchen wir das?
+-->
+
+```{r theilindex,,eval=FALSE,echo=FALSE}
+library(ineq)
+# Theil-Indizes für Jahre und Kantone (Einheiten sind hier Gemeinden, nicht Individuen!!)
+theils <- aggregate(real_mean_reinka~Kantonname+Jahr, data=daten,FUN=Theil)
+qplot(Jahr,real_mean_reinka,data=theils,geom="line")+facet_wrap(~Kantonname)+ggtitle("Entwicklung des Theil-Index \nnach Kantonen")
+```
+
+# Dekomposition
+
+# Reldist-Plots
+
+# Regressionsmodelle: y = Gini Koeffizient der Gemeinden
+
+```{r ols, results='asis',,echo=FALSE,results='hide',eval=FALSE}
+fit.ols <- lm(gini_steink~real_mean_steink+real_median_steink, data=daten)
+library(xtable)
+print(xtable(fit.ols), type="html")
+```
+
+# FE mit mean und median
+
+```{r fe, results='asis',,results='hide',echo=FALSE,eval=FALSE}
+fit.fe <- plm(gini_steink~real_mean_steink+real_median_steink, data=daten,index="Gemeindenr")
+summary(fit.fe)
+
+```
+
+```{r smoothcoefplot, results='hide', echo=FALSE,,warning=FALSE}
+# Koeffizientenplot
+
+SmoothCoefficientPlot <- function(models, modelnames = "", removeintercept = FALSE){
+  # models must be a list()
+ 
+  Alphas <- seq(1, 99, 2) / 100
+ 
+  Multiplier <- qnorm(1 - Alphas / 2)
+  zzTransparency <<- 1/(length(Multiplier)/4)
+  #CoefficientTables <- lapply(models, function(x){summary(x)$coef})
+  CoefficientTables <- summary(models)$coef
+  #TableRows <- unlist(lapply(CoefficientTables, nrow))
+  TableRows <- nrow(CoefficientTables)
+ 
+  if(modelnames[1] == ""){
+    ModelNameLabels <- rep(paste("Model", 1:length(TableRows)), TableRows)
+    } else {
+    ModelNameLabels <- rep(modelnames, TableRows)
+    }
+ 
+  MatrixofModels <- cbind(do.call(rbind, list(CoefficientTables)), ModelNameLabels)
+  if(removeintercept == TRUE){
+    MatrixofModels <- MatrixofModels[!rownames(MatrixofModels) == "(Intercept)", ]
+    }
+  MatrixofModels <- data.frame(cbind(rownames(MatrixofModels), MatrixofModels))
+ 
+  MatrixofModels <- data.frame(cbind(MatrixofModels, rep(Multiplier, each = nrow(MatrixofModels))))
+ 
+  colnames(MatrixofModels) <- c("IV", "Estimate", "StandardError", "TValue", "PValue", "ModelName", "Scalar")
+  MatrixofModels$IV <- factor(MatrixofModels$IV, levels = MatrixofModels$IV)
+  MatrixofModels[, -c(1, 6)] <- apply(MatrixofModels[, -c(1, 6)], 2, function(x){as.numeric(as.character(x))})
+  MatrixofModels$Emphasis <- by(1 - seq(0, 1, length = length(Multiplier) + 1)[-1], as.character(round(Multiplier, 5)), mean)[as.character(round(MatrixofModels$Scalar, 5))]
+ 
+  OutputPlot <- qplot(data = MatrixofModels, x = IV, y = Estimate,
+   ymin = Estimate - Scalar * StandardError, ymax = Estimate + Scalar * StandardError,
+   ylab = NULL, xlab = NULL, alpha = I(zzTransparency), colour = I(gray(0)), geom = "blank")
+  OutputPlot <- OutputPlot + geom_hline(yintercept = 0, lwd = I(7/12), colour = I(hsv(0/12, 7/12, 7/12)), alpha = I(5/12))
+  OutputPlot <- OutputPlot + geom_linerange(data = MatrixofModels, aes(size = as.integer(1/Emphasis)), alpha = I(zzTransparency), colour = I(gray(0)))
+  OutputPlot <- OutputPlot + scale_size_continuous(legend = FALSE)
+  OutputPlot <- OutputPlot + facet_grid(~ ModelName) + coord_flip() + geom_point(aes(x = IV, y = Estimate), colour = I(gray(0))) + theme_bw()
+  return(OutputPlot)
+  }
+```
+
+```{r coefplots,,warning=FALSE,echo=FALSE}
+daten <- within(daten, {
+  # Skalieren
+  Gini <- scale(gini_steink)
+  Mean <- scale(real_mean_steink)
+  Median <- scale(real_median_steink)
+  Prim <- scale(primp)
+  Sek <- scale(sekp)
+  Tert <- scale(tertp)
+  Uni <- scale(uni)
+  Bild <- scale(bild)
+  J<-factor(Jahr)
+})
+
+kdaten$bild<-daten$bild[match(kdaten$kj,daten$kj)]
+kdaten$uni<-daten$uni[match(kdaten$kj,daten$kj)]
+kdaten <- within(kdaten, {
+  Gini <- scale(G_steink)
+  Mean <- scale(real_mean_steink)
+  Median <- scale(real_median_steink)
+  Uni <- scale(uni)
+  Bild <- scale(bild)
+  J<-factor(steuerperiode)
+})
+
+plm_daten <- subset(daten,select=c("Gini","Mean","Median","J","primp","sekp","tertp","Gemeindenr","Kantonname","ausl","maenner","Bild","Uni"))
+```
+
+# Einfluss von mittlerem und medianem steuerbaren Realeinkommen nach Kanton
+
+```{r bycanton.plot,,warning=FALSE,echo=FALSE}
+fit.canton <- plm(Gini~(Mean+Median):Kantonname+J, data=plm_daten,index="Gemeindenr")
+SmoothCoefficientPlot(fit.canton,modelnames=paste0("By cantons: Impact of real mean and median income on inequality (Gini) Rsq-within=", round(r.squared(fit.canton),2)))
+```
+
+```{r sektorenmodell.fit,,echo=FALSE}
+fit.sekt <- plm(Gini~Mean+Median+J+J:(primp+sekp+tertp),data=plm_daten,index="Gemeindenr")
+summary(fit.sekt)
+# der ungleichheitsverringernde Einfluss des primären Sektors hat über die Jahre zugenommen
+# der ungleichheitserhöhende EInfluss des sekundären Sektors hat über die Jahre abgenommen
+```
+
+# Plot Sektorenmodell
+
+```{r sektorenmodell.plot,,echo=FALSE,warning=FALSE}
+SmoothCoefficientPlot(fit.sekt,modelnames=paste0("Main effects: Impact of sectoral change on inequality (Gini) Rsq-within=", round(r.squared(fit.sekt),2)))
+```
+
+
+# Zeitliche Dynamik der Einflüsse von mittlerem und medianem Einkommen auf die Ungleichheit
+
+```{r byyear.plot,,warning=FALSE,echo=FALSE,fig.width=16,fig.height=10}
+fit.time <- plm(Gini~(Mean+Median):J+J, data=subset(plm_daten,J!=1996),index="Gemeindenr")
+SmoothCoefficientPlot(fit.time,modelnames=paste0("By years: Impact of real mean and median income on inequality (Gini) Rsq-within=", round(r.squared(fit.time),2)))
+```
+
+<!---
+### Bildungsausgaben/Uniabschlüsse
+-->
+```{r bildung,,warnings=FALSE,eval=FALSE,echo=FALSE}
+fit.bild <- plm(Gini~Mean+Median+J:(Bild+Uni)+J,data=kdaten,index="Kantonnr")
+SmoothCoefficientPlot(fit.bild,modelnames="Einfluss von Bildungsvariablen und Immigration auf Ungleichheit (Gini)")
+```
+
+# Resultate - Mittleres und medianes Einkommen nach Jahren:
+
+* die Periode-Dummies weisen darauf hin, dass wichtige Variablen fehlen
+* positive Korrelation mit mittlerem Einkommen und
+* negative Korrelation mit medianem Einkommen, d.h.
+* die Ungleichheitszuwächse stammen von steigenden Topeinkommen
+* Korrelation 1997 und 2007-2009 schwächer (Krisenjahre)
+* in diesen Jahren entwickeln sich beide Enden der Einkommensverteilung gleichartiger
+* vereinfachend gesprochen: **arme Gemeinden haben während des Booms weniger profitiert als reiche aber während der Krisen dasselbe verloren!
+
+# Resulte - Mittleres und medianes Einkommen nach Kantonen:
+
+* ähnliches Bild wie in den reldist Plots
+* zum Beispiel:
+  <ul><li>Fribourg hat sich sehr homogen entwickelt (Fahrstuhleffekt)
+  <li>In Schwyz profitieren Reiche besonders, die armen werden aber nicht ärmer
+  <li>In Genf sind die Armen weiter verarmt
+  <li>Die Ungleichheit in Bern und Zürich reagiert stark auf Einkommensänderungen, es gab aber wenig Veränderung. Bern und Zürich wären daher gemäss Modell wesentlich ungleicher, wenn sie wirtschaftliches Wachstum gehabt hätten.</ul>
+* Mögliche Erklärungen:
+  <ul><li>schwierig
+  <li>der Einfluss von mittleren und medianem Einkommen könnte nicht-linear sein</ul>
+* Hier nicht untersucht: der Einfluss politischer Massnahmen
+
+Sonstige Hinweise:
+* Gini, `Mean` und `Median` sind z-Standardisiert!
+* Einfluss von `mean` und `median` unterschiedlich: In der Finanzkrise umgekehrt. Versuch einer Interpretation: Normalerweise steigt der Median und die Ungleichheit fällt dadurch. In den Finanzkrisenjahren ist der Median gleichgeblieben aber die Ungleichheit gestiegen oder der Median gestiegen aber die Ungleichheit nicht gefallen. Wenn `mean` steigt steigt normal auch die Ungleichheit. In der Finanzkrise: `mean` steigt, Ungleichheit fällt.
+* Zeitdummies: erklären vergleichsweise viel, d.h. im Modell fehlen offenbar noch zeitveränderliche Variablen
+
+
+# Resulte - Sektorenwandel
+
+* 2001, 2005, 2008: Einkommen im primären Sektor liegen zunehmend näher am Medianeinkommen
+* Tertiärer Sektor: überraschenderweise kein Einfluss
+* Sekundärer Sektor: verschwindender Einfluss im Laufe der Zeit; auch eher überraschen, da man positiven Einfluss erwartet
+* Mögliche Erklärungen: 
+<ul><li>"der moderne reiche schweizer Bauer"
+  <li>weniger Heterogenität im teriären Sektor als man vermuten würde
+  <li>Lohndifferenzen im sekundären Sektor die aber abnehmen</ul>
+  
+# Fallstricke
+
+* `steuerbares Einkommen' zeigt nicht das ganze Bild, z.B.
+* Pauschalbesteuerte sind nicht enthalten
+* Verzerrungen durch Änderungen der Abzüge
+* Diese Probleme addressieren wir in zukünftigen Analysen mit Individualdaten von schweizer Kantonen
+
+# Appendix - Einfluss anderer Kontextvariablen
+
+```{r fe_other}
+fit.full <- plm(Gini~poly(Mean,2)+poly(Median,2)+J+ausl+maenner+Bild+Uni+Kantonname,data=plm_daten,index="Gemeindenr")
+summary(fit.full)
+```
+
+* leicht positiver Effekt für Ausländer (Ärzte vs. Niedriglohnkräfte?)
+* Bildungsausgaben verringern Ungleichheit
+* nach wie vor viel Erklärung durch Periodendummies, d.h. fehlende Variablen
+
+# To-Do:
+
+## Steuerprogression
+
+* Errechnen aus Gini_steuern / Gini_steink!
+
+## Dekomposition
+
+* Steuerwettbewerb, Konjunktur vs. Staat
+
+# Vermögen
+
