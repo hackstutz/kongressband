@@ -10,23 +10,34 @@
 
 library(reshape2)
 library(ggplot2)
+library(foreign)
 
 ##
 # Prepare data
 
 # load data
-setwd("/Users/oliverhuembelin/kongressband") 
-wealth<-read.dta("data/vermoegen20131023.dta")
+setwd("/Users/oliverhuembelin/kongressband/") 
+wealth<-read.dta("data/vermoegen1981_2010.dta")
+
+# Prepare Data
+
+wealth$Gini<-wealth$G*100
+
+##
+# load functions
+number_ticks <- function(n) {function(limits) pretty(limits, n)}
+
 
 ##
 # Visualize
 
-ggplot(welath, aes(x=Year,y=mdp))+
-  geom_line(aes(x=Year,y=mdp))+
+ggplot(wealth, aes(x=year,y=Gini))+
+  geom_line(aes(x=year,y=Gini))+
+  geom_point(aes(x=year,y=Gini),size=3.5)+
   xlab("Jahr") +
   scale_x_continuous(breaks=number_ticks(10))+
-  ylab("BIP pro Kopf in 1990 GK$") +
-  scale_y_continuous(limits=c(9000, 26000)) +
+  ylab("Gini") +
+  scale_y_continuous(limits=c(82,85)) +
   theme_bw()
 
 
