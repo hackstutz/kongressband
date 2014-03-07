@@ -151,13 +151,12 @@ ggplot(kdaten, aes(x=steuerperiode,y=G_steink))+geom_line(size=1)+facet_wrap(~ka
 
 ```{r vermoegensstatistik}
 library(ineq)
-vermoegen <- read.dta("data/vermoegen20131023.dta")
-lorenz_vermoegen <- Lc(vermoegen$rverm[vermoegen$kanton=="CH"&vermoegen$jahr==2010],vermoegen$anz_pflichtige[vermoegen$kanton=="CH"&vermoegen$jahr==2010])
+vermoegen <- subset(read.dta("data/vermoegen20131023.dta"), kanton=="CH"&jahr==2010)
 einkommen <- subset(read.dta("data/steuerdaten20131024.dta"), kanton=="CH"&steuerperiode==2010)
 
-lorenz_vermoegen <- Lc(vermoegen$rverm[vermoegen$kanton=="CH"&vermoegen$jahr==2010],vermoegen$anz_pflichtige[vermoegen$kanton=="CH"&vermoegen$jahr==2010])
+lorenz_vermoegen <- Lc(vermoegen$rverm/vermoegen$anz_pflichtige,vermoegen$anz_pflichtige)
 
-lorenz_einkommen  <- Lc(einkommen$steink,einkommen$anz_pflichtige)
+lorenz_einkommen  <- Lc(einkommen$steink/einkommen$anz_pflichtige,einkommen$anz_pflichtige)
 
 lorenz_vermoegen <- data.frame(lorenz_vermoegen$p, lorenz_vermoegen$L)
 lorenz_einkommen <- data.frame(lorenz_einkommen$p, lorenz_einkommen$L)
@@ -167,7 +166,7 @@ names(lorenz_vermoegen)<- c("p","L","Lorenzkurve")
 names(lorenz_einkommen)<- c("p","L","Lorenzkurve")
 lorenzdata <- rbind(lorenz_vermoegen, lorenz_einkommen)
 
-ggplot(lorenzdata, aes(x=p,y=L,colour=Lorenzkurve)) + geom_line(size=2) + geom_segment(y=0, x=0,yend=1,xend=1,colour="black")+theme_bw()+scale_colour_grey(name="")+  geom_segment(y=0, x=0,yend=0,xend=1,colour="black")+  geom_segment(y=0, x=1,yend=1,xend=1,colour="black")+annotate("text",label="Gleichverteilung",x=0.55,y=0.6,angle=36,size=3)+annotate("text",label="Gini=0.79",x=0.7,y=0.27,angle=36,size=3)+annotate("text",label="Gini=0.36",x=0.6,y=0.47,angle=36,size=3)+ylab("Anteil am Gesamten")+xlab("Bevölkerung")
+ggplot(lorenzdata, aes(x=p,y=L,colour=Lorenzkurve)) + geom_line(size=2) + geom_segment(y=0, x=0,yend=1,xend=1,colour="black")+theme_bw()+scale_colour_grey(name="")+  geom_segment(y=0, x=0,yend=0,xend=1,colour="black")+  geom_segment(y=0, x=1,yend=1,xend=1,colour="black")+annotate("text",label="Gleichverteilung",x=0.55,y=0.61,angle=36,size=5)+annotate("text",label="Gini=0.79",x=0.81,y=0.21,angle=40,size=5)+annotate("text",label="Gini=0.36",x=0.64,y=0.46,angle=36,size=5)+ylab("Anteil am Gesamten")+xlab("Bevölkerung")
 ```
 
 # Schweizkarte nach Durhschnittseinkommen

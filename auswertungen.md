@@ -11,9 +11,6 @@
 
 
 
-```
-## Error: Objekt 'daten' nicht gefunden
-```
 
 
 # Veränderung des Gini (steuerbares Einkommen) 
@@ -62,10 +59,48 @@ verschiedene Typen von Kantonen:
 
 
 ```
-## Error: Indizierung außerhalb der Grenzen
+## Loading required package: sp
+## Checking rgeos availability: FALSE
+##  	Note: when rgeos is not available, polygon geometry 	computations in maptools depend on gpclib,
+##  	which has a restricted licence. It is disabled by default;
+##  	to enable gpclib, type gpclibPermit()
 ```
 
-<img src="figure/schweizkarte.png" title="plot of chunk schweizkarte" alt="plot of chunk schweizkarte" width="800px" height="500px" />
+```
+## Error: Error opening SHP file
+```
+
+```
+## Error: Objekt 'shp09' nicht gefunden
+```
+
+```
+## Loading required package: RColorBrewer
+## Loading required package: lattice
+## 
+## Attaching package: 'latticeExtra'
+## 
+## Das folgende Objekt ist maskiert from 'package:ggplot2':
+## 
+##     layer
+```
+
+```
+## Error: Error opening SHP file
+```
+
+```
+## Error: Error opening SHP file
+```
+
+```
+## Error: Objekt 'shp09' nicht gefunden
+```
+
+```
+## Error: Fehler bei der Auswertung des Argumentes 'obj' bei der Methodenauswahl
+## für Funktion 'spplot': Fehler: Objekt 'shp09' nicht gefunden
+```
 
 
 Die Darstellung der Einkommen auf Gemeindeebene in einer Karte liefert noch einige weitere Informationen zum Gesamtbild die aus den deskriptiven Statistiken der Kantone und den Regressionsmodellen nicht direkt ersichtlich sind. Zum einen ist zu sehen, dass es ein relativ starkes Stadt-Land-Gefälle gibt, bzw. dass das Einkommen stark von der Bevölkerungsdichte getrieben ist. Beispielsweise kann man sehen, dass die Kantone Bern und Tessin, die bezüglich ihres Durchschnittseinkommens eher in der unteren Hälfte rangieren, grössere zusammenhängende Landstriche mit hohem Einkommen besitzen. Waadt und Zürich fallen dagegen durch eine homogen hohe Bevölkerungsdichte und die Abwesenheit von grösseren ländlichen Gebieten ins obere Drittel des Einkommensrankings. Jura, Schwyz, Zug und Nidwalden bilden die wenigen Ausnahmen. Während im Jura das Einkommen in Relation zur Bevölkerungdichte eher niedrig ist stechen die ländlichen Kantone Schwyz, Nidwalden und Zug durch den Steuerwettbewerb mit hohen Einkommen hervor. Ein Grossteil des Durchschnittseinkommens lässt sich also womöglich durch die Entwicklung der Bevölkerungsdichte (z.B. aufgrund von Geografischen Begebenheiten wie die Nähe zu Seen und die Abwesenheit von Bergen) zurückführen.
@@ -112,15 +147,7 @@ Brauchen wir das?
 
 
 ```
-## Error: Objekt 'daten' nicht gefunden
-```
-
-```
-## Error: Objekt 'daten' nicht gefunden
-```
-
-```
-## Error: Objekt 'daten' nicht gefunden
+## Error: Objekt 'real_mean_steink' nicht gefunden
 ```
 
 ```
@@ -128,7 +155,7 @@ Brauchen wir das?
 ```
 
 ```
-## Error: Objekt 'daten' nicht gefunden
+## Error: undefined columns selected
 ```
 
 

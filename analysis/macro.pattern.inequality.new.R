@@ -30,6 +30,15 @@ growth<-function(x) c(NA,diff(log(x))*100)
 # load data
 setwd("U:/kongressband") 
 macrodata<-read.table("data/Macro_indicators_gini.csv", header = TRUE, sep = ";")
+daten <- subset(read.dta("data/ginis_und_perzentile20140120.dta"),kanton=="CH")
+daten[,c("steuerperiode","G_steink")]
+macrodata[,c("Year","Gini")]
+macrodata <- subset(macrodata,Year>=1950)
+library(zoo)
+macrodata$Gini_int <- macrodata$Gini
+macrodata$Gini_int <- ifelse(c(diff(macrodata$Gini_int),1)==0,NA,macrodata$Gini_int)
+
+macrodata$Gini_int[3:length(macrodata$Gini_int)] <- macrodata$Gini_int[3:length(macrodata$Gini_int)]+ifelse(diff(macrodata$Gini)[2:length(diff(macrodata$Gini))]==0,0,diff(macrodata$Gini)/2)
 
 # Fill gap's with linear interpolation
 macrodataZoo <- zoo(macrodata)
