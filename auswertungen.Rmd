@@ -166,7 +166,7 @@ names(lorenz_vermoegen)<- c("p","L","Lorenzkurve")
 names(lorenz_einkommen)<- c("p","L","Lorenzkurve")
 lorenzdata <- rbind(lorenz_vermoegen, lorenz_einkommen)
 
-ggplot(lorenzdata, aes(x=p,y=L,colour=Lorenzkurve)) + geom_line(size=2) + geom_segment(y=0, x=0,yend=1,xend=1,colour="black")+theme_bw()+scale_colour_grey(name="")+  geom_segment(y=0, x=0,yend=0,xend=1,colour="black")+  geom_segment(y=0, x=1,yend=1,xend=1,colour="black")+annotate("text",label="Gleichverteilung",x=0.55,y=0.61,angle=36,size=5)+annotate("text",label="Gini=0.79",x=0.81,y=0.21,angle=40,size=5)+annotate("text",label="Gini=0.36",x=0.64,y=0.46,angle=36,size=5)+ylab("Anteil am Gesamten")+xlab("Bevölkerung")
+ggplot(lorenzdata, aes(x=p,y=L,colour=Lorenzkurve)) + geom_line(size=2) + geom_segment(y=0, x=0,yend=1,xend=1,colour="black")+theme_bw()+scale_colour_grey(name="")+  geom_segment(y=0, x=0,yend=0,xend=1,colour="black")+  geom_segment(y=0, x=1,yend=1,xend=1,colour="black")+annotate("text",label="Gleichverteilung",x=0.55,y=0.61,angle=36,size=5)+annotate("text",label="Gini=0.84",x=0.81,y=0.21,angle=40,size=5)+annotate("text",label="Gini=0.36",x=0.64,y=0.46,angle=36,size=5)+ylab("Anteil am Gesamten")+xlab("Bevölkerung")
 ```
 
 # Schweizkarte nach Durhschnittseinkommen
