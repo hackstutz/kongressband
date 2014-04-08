@@ -28,26 +28,25 @@ growth<-function(x) c(NA,diff(log(x))*100)
 # Prepare data
 
 # load data
-setwd("U:/kongressband") 
+
 macrodata<-read.table("data/Macro_indicators_gini.csv", header = TRUE, sep = ";")
-daten <- subset(read.dta("data/ginis_und_perzentile20140120.dta"),kanton=="CH")
-daten[,c("steuerperiode","G_steink")]
-macrodata[,c("Year","Gini")]
-macrodata <- subset(macrodata,Year>=1950)
-library(zoo)
-macrodata$Gini_int <- macrodata$Gini
-macrodata$Gini_int <- ifelse(c(diff(macrodata$Gini_int),1)==0,NA,macrodata$Gini_int)
 
-macrodata$Gini_int[3:length(macrodata$Gini_int)] <- macrodata$Gini_int[3:length(macrodata$Gini_int)]+ifelse(diff(macrodata$Gini)[2:length(diff(macrodata$Gini))]==0,0,diff(macrodata$Gini)/2)
-
-# Fill gap's with linear interpolation
-macrodataZoo <- zoo(macrodata)
-index(macrodataZoo) <- macrodataZoo[,1]
-macrodata<- na.approx(macrodataZoo)
-macrodata<-data.frame(macrodata)
 
 # Restrict dataset to 1950-2010
 macro<-subset(macrodata,Year>1949)
+
+# Correct Gini
+macro$Gini <- macro$Gini
+macro$Gini <- ifelse(c(diff(macro$Gini),1)==0,NA,macro$Gini)
+
+
+# Fill gap's with linear interpolation
+macrodataZoo <- zoo(macro)
+index(macrodataZoo) <- macrodataZoo[,1]
+macrodata<- na.approx(macrodataZoo)
+macro<-data.frame(macrodata)
+
+
 
 # Adding variables wiht change rates
 colnames(macro)[which(colnames(macro) == 'mdp.g')] <- 'Mdp.g'
@@ -123,7 +122,7 @@ g.mdp.smooth<-ggplot(macro,aes(x=mdp.g,y=Gini.g)) +
   geom_point(shape=1)+ 
   geom_smooth(method="loess",colour="black") +
   theme_bw() + 
-  annotate("text", x = -4, y = 2, label = "r=0.48",size=5) +
+  annotate("text", x = -4, y = 2, label = paste("r=",round(r$estimate,2)),size=5) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Wirtschaftswachstum (in Prozent)") 
 g.mdp.smooth<-g.mdp.smooth + theme(text=element_text(size=20))
@@ -148,26 +147,29 @@ gg.sq<-ggplot(macro, aes(x=Year,y=sozialquote))+
 gg.sq<-gg.sq + ggtitle("Soziale Sicherheit")+ theme(text=element_text(size=20))
 gg.sq
 
-g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
-  geom_point(shape=1)+ 
-  geom_smooth(method=lm,colour="black") +
-  theme_bw() + 
-  annotate("text", x = 10, y = 2, label = "r=-0.56") +
-  ylab("Veränderung Gini (in Prozent)") + 
-  xlab("Veränderung der Sozialquote (in Prozent)") 
-g.sq<-g.sq+ theme(text=element_text(size=20))
-
 r<-cor.test(x=macro$Gini.g,y=macro$sozialquote.g,use="complete.obs",method="pearson")
 r
 
 g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
   geom_point(shape=1)+ 
-  geom_smooth(method="loess",colour="red") +
+  geom_smooth(method=lm,colour="black") +
   theme_bw() + 
-  annotate("text", x = 10, y = 2, label = "r=-0.56") +
+  annotate("text", x = 10, y = 2, label = paste("r=",round(r$estimate,2))) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung der Sozialquote (in Prozent)") 
 g.sq<-g.sq+ theme(text=element_text(size=20))
+g.sq
+
+
+g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
+  geom_point(shape=1)+ 
+  geom_smooth(method="loess",colour="black") +
+  theme_bw() + 
+  annotate("text", x = 12, y = 1.5, label = paste("r=",round(r$estimate,2))) +
+  ylab("Veränderung Gini (in Prozent)") + 
+  xlab("Veränderung der Sozialquote (in Prozent)") 
+g.sq<-g.sq+ theme(text=element_text(size=20))
+g.sq
 
 ##
 # Sozialausgaben
@@ -257,6 +259,15 @@ g.f<-ggplot(macro,aes(x=foreigner.g,y=Gini.g)) +
   xlab("Veränderung Ausländeranteil(in Prozent)") 
 g.f
 
+g.f<-ggplot(macro,aes(x=foreigner.g,y=Gini.g)) +
+  geom_point(shape=1)+ 
+  geom_smooth(method="loess",colour="black") +
+  theme_bw() + 
+  annotate("text", x = 0.5, y = 2.5, label = "r=-0.22") +
+  ylab("Veränderung Gini (in Prozent)") + 
+  xlab("Veränderung Ausländeranteil(in Prozent)") 
+g.f
+
 r<-cor.test(x=macro$Gini.g,y=macro$foreigner.g,use="complete.obs",method="pearson")
 r
 
@@ -312,9 +323,9 @@ par(mfrow = c(1,1))
 ##
 # Correlation
 
-cor(x=macro$Gini.g,y=macro[,c(19:33)],use="pairwise.complete.obs",method="pearson")
+cor(x=macro$mdp.g,y=macro[,c(19:33)],use="pairwise.complete.obs",method="pearson")
 
-cor(x=macro$Gini.g,y=macro[,c("sozialquote.g","mdp.g","foreigner.g","HHp1.g")],use="pairwise.complete.obs",method="pearson")
+x<-cor(x=macro$Gini.g,y=macro[,c("sozialquote.g","mdp.g","foreigner.g","HHp1.g")],use="pairwise.complete.obs",method="pearson")
 
 htmlreg(x,booktabs=FALSE, dcolum= FALSE, file= "test")
 
@@ -323,11 +334,11 @@ htmlreg(x,booktabs=FALSE, dcolum= FALSE, file= "test")
 # Regression
 
 # simple static model
-model.stat<-lm(Gini~1+sozialquote+mdp+HHp1,macro)
+model.stat<-lm(Gini~1+sozialausgaben.g+mdp.g,macro)
 summary(model.stat)
 
 # simple static model accounting for trend
-model.stat.trend<-lm(Gini~1+sozialquote+mdp+HHp1+Year,macro)
+model.stat.trend<-lm(Gini~1+sozialquote.g+mdp.g+HHp1.g+altersquotient_2.g+Year,macro)
 summary(model.stat.trend)
 
 
@@ -348,18 +359,53 @@ dwtest(model.fd)
 
 # simple model with lag
 library(dyn)
-model.lag<-dyn$lm(ts(Gini.g)~1+ts(sozialquote.g)+ts(mdp.g)+ts(HHp1.g)+lag(ts(Gini.g),-1),macro)
-summary(model.lag)
+model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1),macro)
+summary(model.lag.1)
+dwtest(model.lag)
+model.lag.2<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g),macro)
+summary(model.lag.2)
+dwtest(model.lag.2)
 
+# Model with kuznet
+
+model.lag.kuznet<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g)+ts(sector2.g)+ts(sector3.g),macro)
+summary(model.lag.kuznet)
+
+
+model.lag.x<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g),macro)
+summary(model.lag.x)
+
+anova(model.lag.test,model.lag)
+
+
+##
+# Relative Importance
+# Package
+library(relaimpo)
+calc.relimp(model.lag.1)
+calc.relimp(model.lag.2)
+calc.relimp(model.lag.kuznet)
+plot(calc.relimp(model.lag.2,rank=TRUE))
+
+boot <- boot.relimp(model.lag.kuznet, b = 1000, rank = TRUE, diff = TRUE, rela = FALSE)
+booteval.relimp(boot) 
+plot(booteval.relimp(boot,sort=TRUE))
 # more complex models (with less observations)
 
 # Model 57 obs
-model.57<-lm(Gini.g~1+sozialquote.g+mdp.g+foreigner.g+HHp1.g+altersquotient_2.g,macro)
+model.57<-lm(Gini.g~1+sozialausgaben.g+mdp.g+foreigner.g+altersquotient_2.g,macro)
 summary(model.57)
+dwtest(model.57)
+
+model.57<-lm(Gini.g~1+sozialausgaben.g+mdp.g+foreigner.g+HHp1.g+altersquotient_2.g+Year,macro)
+summary(model.57)
+dwtest(model.57)
+
 
 # Model 49 obs
-model.49<-lm(Gini.g~1+sozialquote.g+mdp.g++HHp1.g+uniondensity+sector2.g+sector3.g+altersquotient.g+foreigner.g,macro)
+model.49<-lm(Gini.g~1+sozialausgaben.g+mdp.g++HHp1.g+uniondensity.g+altersquotient.g+foreigner.g,macro)
 summary(model.49)
+dwtest(model.49)
 
 sum(!is.na(macro$Gini.g))
 sum(!is.na(macro$foreigner.g))
@@ -406,13 +452,13 @@ model.fd<-lm(Gini.g~1+sozialausgaben.g+mdp.g+foreigner.g+altersquotient_2.g+HHp1
 summary(model.fd)
 
 # 1960 bis 2010
-model.49<-lm(Gini.g~1+sozialausgaben.g+mdp.g+foreigner.g+altersquotient_2.g+HHp1.g+uniondensity+sector2.g+sector3.g,macro)
+model.49<-lm(Gini.g~1+sozialausgaben.g+mdp.g+foreigner.g+altersquotient_2.g+HHp1.g+uniondensity.g,macro)
 summary(model.49)
+dwtest(model.49)
 
-# testing for serial correlation
-library(lmtest)
-dwtest(model.fd)
-
+model.lag<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(altersquotient_2.g)+ts(HHp1.g)+lag(ts(Gini.g),-1)+ts(uniondensity.g)+ts(foreigner.g),macro)
+summary(model.lag)
+dwtest(model.lag)
 
 ##
 # Paste Regression results in a format, i can use in word
@@ -445,7 +491,7 @@ sjt.lm(model.49,model.fd,
 
 # Ausländeranteil (Gesamtbevölkerung)
 
-r<-cor(x=macro$Gini.g,y=macro$foreigner.g,use="complete.obs",method="pearson")
+r<-cor.test(x=macro$Gini.g,y=macro$foreigner_2.g,use="complete.obs",method="pearson")
 r
 
 g1<-ggplot(macro,aes(x=Gini.g,y=foreigner.g)) +
@@ -469,15 +515,14 @@ g2 + ggtitle("Ausländeranteil (Erwerbsbevölkerung)")
 
 # Altersquotient
 
-r<-cor(x=macro$Gini.g,y=macro$altersquotient.g,use="complete.obs",method="pearson")
+r<-cor.test(x=macro$Gini.g,y=macro$altersquotient_2.g,use="complete.obs",method="pearson")
 r
 
-g2<-ggplot(macro,aes(x=Gini.g,y=foreigner_2.g)) +
+g2<-ggplot(macro,aes(x=altersquotient.g,y=Gini.g)) +
   geom_point(shape=1)+ 
-  geom_smooth(method=lm) +
-  theme_bw() + 
-  annotate("text", x = 2.5, y = -5, label = "r=0.33") 
-g2 + ggtitle("Ausländeranteil (Erwerbsbevölkerung)")
+  geom_smooth(method="loess") +
+  theme_bw()
+g2
 
   
 
