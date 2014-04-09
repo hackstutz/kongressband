@@ -29,7 +29,8 @@ growth<-function(x) c(NA,diff(log(x))*100)
 
 # load data
 
-macrodata<-read.table("data/Macro_indicators_gini.csv", header = TRUE, sep = ";")
+#macrodata<-read.table("data/Macro_indicators_gini.csv", header = TRUE, sep = ";")
+macrodata<-read.csv("data/Macro_indicators_gini20140409.csv", header = TRUE, sep = ";",dec=",")
 
 
 # Restrict dataset to 1950-2010
@@ -85,7 +86,6 @@ gini<-ggplot(macro, aes(x=Year,y=Gini))+
   annotate("text", x = 1977, y = 36, label = "Max Gini=35.9",size=5) +
   theme_bw()
 gini<-gini + ggtitle("Einkommensungleichheit") + theme(text=element_text(size=20))
-gini
 
 
 
@@ -101,21 +101,20 @@ bip<-ggplot(macro, aes(x=Year,y=mdp))+
   annotate("text", x = 1990, y = 22, label = "Strukturkrise der 90er",size=5) +
   annotate("text", x = 2008, y = 26, label = "Finanzkrise",size=5)
 bip<-bip + ggtitle("Wirtschaftswachstum") + theme(text=element_text(size=20))
-bip
+#bip
 
-
+r<-cor.test(x=macro$Gini.g,y=macro$mdp.g,use="complete.obs",method="pearson")
 g.mdp<-ggplot(macro,aes(x=mdp.g,y=Gini.g)) +
   geom_point(shape=1)+ 
   geom_smooth(method=lm,colour="black") +
   theme_bw() + 
-  annotate("text", x = -4, y = 2, label = "r=0.48",size=5) +
+  annotate("text", x = -4, y = 2, label = paste0("r=",round(r$estimate,2)),size=5) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Wirtschaftswachstum (in Prozent)") 
 g.mdp<-g.mdp + theme(text=element_text(size=20))
-g.mdp
+#g.mdp
 
-r<-cor.test(x=macro$Gini.g,y=macro$mdp.g,use="complete.obs",method="pearson")
-r
+
 
 # Smooth line
 
@@ -127,16 +126,15 @@ g.mdp.smooth<-ggplot(macro,aes(x=mdp.g,y=Gini.g)) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Wirtschaftswachstum (in Prozent)") 
 g.mdp.smooth<-g.mdp.smooth + theme(text=element_text(size=20))
-g.mdp.smooth
-
-
-
+#g.mdp.smooth
 
 
 
 
 ##
 # Entwicklung Sozialquote
+r<-cor.test(x=macro$Gini.g,y=macro$sozialquote.g,use="complete.obs",method="pearson")
+r
 gg.sq<-ggplot(macro, aes(x=Year,y=sozialquote))+
   geom_line(aes(x=Year,y=sozialquote))+
   xlab("Jahr") +
@@ -146,10 +144,8 @@ gg.sq<-ggplot(macro, aes(x=Year,y=sozialquote))+
   annotate("text", x = 1972, y = 19, label = "Erhöhung AHV-Renten",size=5) +
   annotate("text", x = 2002, y = 22, label = "Reaktion auf Strukturkrise",size=5)
 gg.sq<-gg.sq + ggtitle("Soziale Sicherheit")+ theme(text=element_text(size=20))
-gg.sq
+#gg.sq
 
-r<-cor.test(x=macro$Gini.g,y=macro$sozialquote.g,use="complete.obs",method="pearson")
-r
 
 g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
   geom_point(shape=1)+ 
@@ -159,7 +155,8 @@ g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung der Sozialquote (in Prozent)") 
 g.sq<-g.sq+ theme(text=element_text(size=20))
-g.sq
+#g.sq
+
 
 
 g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
@@ -170,51 +167,60 @@ g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung der Sozialquote (in Prozent)") 
 g.sq<-g.sq+ theme(text=element_text(size=20))
-g.sq
+#g.sq
+
+
 
 ##
 # Sozialausgaben
-
+# 
 gg.sa<-ggplot(macro, aes(x=Year,y=sozialausgaben))+
   geom_line(aes(x=Year,y=sozialausgaben))+
   xlab("Jahr") +
   scale_x_continuous(breaks=number_ticks(3))+
   ylab("Sozialausgaben") +
   theme_bw()
-gg.sa
+#gg.sa
+# 
+# g.sa<-ggplot(macro,aes(x=sozialausgaben.g,y=Gini.g)) +
+#   geom_point(shape=1)+ 
+#   geom_smooth(method=lm,colour="black") +
+#   theme_bw() + 
+#   annotate("text", x = 10, y = 2, label = "r=-0.50") +
+#   ylab("Veränderung Gini (in Prozent)") + 
+#   xlab("Veränderung der Sozialausgaben (in Prozent)") 
+# g.sa
 
-g.sa<-ggplot(macro,aes(x=sozialausgaben.g,y=Gini.g)) +
-  geom_point(shape=1)+ 
-  geom_smooth(method=lm,colour="black") +
-  theme_bw() + 
-  annotate("text", x = 10, y = 2, label = "r=-0.50") +
-  ylab("Veränderung Gini (in Prozent)") + 
-  xlab("Veränderung der Sozialausgaben (in Prozent)") 
-g.sa
+# r<-cor.test(x=macro$Gini.g,y=macro$sozialausgaben.g,use="complete.obs",method="pearson")
+# r
+# g.sa<-ggplot(macro,aes(x=sozialausgaben.g,y=Gini.g)) +
+#   geom_point(shape=1)+ 
+#   geom_smooth(method=loess,colour="black") +
+#   theme_bw() + 
+#   annotate("text", x = 10, y = 2, label = paste("r=",round(r$estimate,2))) +
+#   ylab("Veränderung Gini (in Prozent)") + 
+#   xlab("Veränderung der Sozialausgaben (in Prozent)") 
+# g.sa
 
-g.sa<-ggplot(macro,aes(x=sozialausgaben.g,y=Gini.g)) +
-  geom_point(shape=1)+ 
-  geom_smooth(method=loess,colour="black") +
-  theme_bw() + 
-  annotate("text", x = 10, y = 2, label = "r=-0.50") +
-  ylab("Veränderung Gini (in Prozent)") + 
-  xlab("Veränderung der Sozialausgaben (in Prozent)") 
-g.sa
+for(abbildung in c("gini","bip","g.mdp.smooth","g.sq")) {
+png(paste0("figure/",abbildung,".png"), width=800, heigh=600)
+print(get(abbildung))
+dev.off()
+}
 
-r<-cor.test(x=macro$Gini.g,y=macro$sozialausgaben.g,use="complete.obs",method="pearson")
-r
-
+png("figure/gg.sq.png", width=800, heigh=600)
 # combination of Sozialexpenditure plots
-
 gg.sq
 print(gg.sa,vp=viewport(.8, .3, .3, .3))
+dev.off()
+
 
 # Combination of all plots
 
-require(gridExtra)
-blankPanel<-grid.rect(gp=gpar(col="white"))
-
-grid.arrange(gini, blankPanel,bip,g.mdp,gg.sq,g.sq,ncol=2,nrow=3)
+# require(gridExtra)
+# blankPanel<-grid.rect(gp=gpar(col="white"))
+# 
+# grid.arrange(gini, blankPanel,bip,g.mdp,gg.sq,g.sq,ncol=2,nrow=3)
 
 
 # Anteil 1-Personen Haushalte
@@ -233,7 +239,7 @@ g.hhp1<-ggplot(macro,aes(x=HHp1.g,y=Gini.g)) +
   annotate("text", x = 0.5, y = 2.5, label = "r=-0.04") +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung Anteil 1-Personen HH (in Prozent)") 
-g.hhp1
+#g.hhp1
 
 r<-cor.test(x=macro$Gini.g,y=macro$HHp1.g,use="complete.obs",method="pearson")
 r
@@ -258,7 +264,7 @@ g.f<-ggplot(macro,aes(x=foreigner.g,y=Gini.g)) +
   annotate("text", x = 0.5, y = 2.5, label = "r=-0.22") +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung Ausländeranteil(in Prozent)") 
-g.f
+#g.f
 
 g.f<-ggplot(macro,aes(x=foreigner.g,y=Gini.g)) +
   geom_point(shape=1)+ 
@@ -267,7 +273,7 @@ g.f<-ggplot(macro,aes(x=foreigner.g,y=Gini.g)) +
   annotate("text", x = 0.5, y = 2.5, label = "r=-0.22") +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung Ausländeranteil(in Prozent)") 
-g.f
+#g.f
 
 r<-cor.test(x=macro$Gini.g,y=macro$foreigner.g,use="complete.obs",method="pearson")
 r
@@ -360,7 +366,7 @@ dwtest(model.fd)
 
 # simple model with lag
 library(dyn)
-model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialquote.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1),macro)
+model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1),macro)
 summary(model.lag.1)
 dwtest(model.lag)
 model.lag.2<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g),macro)
@@ -380,18 +386,26 @@ anova(model.lag.test,model.lag)
 
 
 ##
-# Relative Importance
-# Package
 library(relaimpo)
-calc.relimp(model.lag.1)
-calc.relimp(model.lag.2)
-calc.relimp(model.lag.kuznet)
-plot(calc.relimp(model.lag.2,rank=TRUE))
+set.seed(999)
+# Bootstrap Measures of Relative Importance (1000 samples)
+boot <- boot.relimp(model.lag.1, b = 1000, type = "lmg", rank = TRUE)
+namen <- c("Sozialausgaben","GDP","Ausländeranteil","Altersquotient","Gini t-1","Unerklärte Varianz")
+betas <- boot@boot$t0[4:8]
+betas <-c(betas,1-sum(betas))
+order <-1:6
+bcolour<-c(rep("darkgrey",5),"grey")
+min_ci <- c(sapply(data.frame(boot@boot$t[,4:8]),quantile,0.025),NA)
+max_ci <- c(sapply(data.frame(boot@boot$t[,4:8]),quantile,0.975),NA)
+bdata<-data.frame(betas,namen,min_ci,max_ci,order,bcolour,group=1)
 
-boot <- boot.relimp(model.lag.kuznet, b = 1000, rank = TRUE, diff = TRUE, rela = FALSE)
-booteval.relimp(boot) 
-plot(booteval.relimp(boot,sort=TRUE))
-# more complex models (with less observations)
+
+p1<-ggplot(bdata, width=10,aes(x=reorder(namen,order),y=betas,ymax=max_ci,ymin=min_ci))+geom_bar(stat="identity",fill=bcolour)+ geom_linerange(colour="black")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1))+scale_colour_grey()+xlab("R² = 0.45") +ylab("% erklärte Varianz") + scale_y_continuous(limits=c(0, 0.6))
+
+png("figure/lmg_mod1.png", width=600, heigh=450)
+print(p1)
+dev.off()
+
 
 # Model 57 obs
 model.57<-lm(Gini.g~1+sozialausgaben.g+mdp.g+foreigner.g+altersquotient_2.g,macro)
