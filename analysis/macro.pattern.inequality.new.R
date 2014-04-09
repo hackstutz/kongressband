@@ -38,6 +38,7 @@ macro<-subset(macrodata,Year>1949)
 # Correct Gini
 macro$Gini <- macro$Gini
 macro$Gini <- ifelse(c(diff(macro$Gini),1)==0,NA,macro$Gini)
+macro$Gini[macro$Year==1994]<-33.6 # manualy recorrect ifelse-correction
 
 
 # Fill gap's with linear interpolation
@@ -359,7 +360,7 @@ dwtest(model.fd)
 
 # simple model with lag
 library(dyn)
-model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1),macro)
+model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialquote.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1),macro)
 summary(model.lag.1)
 dwtest(model.lag)
 model.lag.2<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g),macro)
