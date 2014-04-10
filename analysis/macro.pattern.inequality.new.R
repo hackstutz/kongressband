@@ -52,7 +52,7 @@ macro<-data.frame(macrodata)
 
 # Adding variables wiht change rates
 colnames(macro)[which(colnames(macro) == 'mdp.g')] <- 'Mdp.g'
-macro.g<-sapply(macro[,c(2:16)],FUN=growth)
+macro.g<-sapply(macro[,c(2:18)],FUN=growth)
 colnames(macro.g)<-paste(colnames(macro.g),".g",sep="")
 macro<-cbind(macro,macro.g)
 
@@ -84,9 +84,9 @@ gini<-ggplot(macro, aes(x=Year,y=Gini))+
   annotate("text", x = 1955, y = 31, label = "Min Gini=30.9",size=5) +
   #scale_y_continuous(limits=c(0,40)) +
   annotate("text", x = 1977, y = 36, label = "Max Gini=35.9",size=5) +
-  theme_bw()
+  theme_bw()+geom_vline(x=1972, linetype=2)+geom_vline(x=1994, linetype=2)
 gini<-gini + ggtitle("Einkommensungleichheit") + theme(text=element_text(size=20))
-
+#gini
 
 
 # Wirtschaftswachstum
@@ -100,7 +100,7 @@ bip<-ggplot(macro, aes(x=Year,y=mdp))+
   annotate("text", x = 1974, y = 19, label = "Ölkrise 1974",size=5) +
   annotate("text", x = 1990, y = 22, label = "Strukturkrise der 90er",size=5) +
   annotate("text", x = 2008, y = 26, label = "Finanzkrise",size=5)
-bip<-bip + ggtitle("Wirtschaftswachstum") + theme(text=element_text(size=20))
+bip<-bip + ggtitle("Wirtschaftswachstum") + theme(text=element_text(size=20))+geom_vline(x=1972, linetype=2)+geom_vline(x=1994, linetype=2)
 #bip
 
 r<-cor.test(x=macro$Gini.g,y=macro$mdp.g,use="complete.obs",method="pearson")
@@ -143,7 +143,7 @@ gg.sq<-ggplot(macro, aes(x=Year,y=sozialquote))+
   theme_bw() +
   annotate("text", x = 1972, y = 19, label = "Erhöhung AHV-Renten",size=5) +
   annotate("text", x = 2002, y = 22, label = "Reaktion auf Strukturkrise",size=5)
-gg.sq<-gg.sq + ggtitle("Soziale Sicherheit")+ theme(text=element_text(size=20))
+gg.sq<-gg.sq + ggtitle("Soziale Sicherheit")+ theme(text=element_text(size=20))+geom_vline(x=1972, linetype=2)+geom_vline(x=1994, linetype=2)
 #gg.sq
 
 
@@ -366,16 +366,16 @@ dwtest(model.fd)
 
 # simple model with lag
 library(dyn)
-model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1),macro)
+model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1),macro)
 summary(model.lag.1)
 dwtest(model.lag)
-model.lag.2<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g),macro)
+model.lag.2<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g),macro)
 summary(model.lag.2)
 dwtest(model.lag.2)
 
 # Model with kuznet
 
-model.lag.kuznet<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner.g)+ts(altersquotient_2.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g)+ts(sector2.g)+ts(sector3.g),macro)
+model.lag.kuznet<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g)+ts(sector1.g)+ts(sector3.g),macro)
 summary(model.lag.kuznet)
 
 
@@ -399,8 +399,8 @@ min_ci <- c(sapply(data.frame(boot@boot$t[,4:8]),quantile,0.025),NA)
 max_ci <- c(sapply(data.frame(boot@boot$t[,4:8]),quantile,0.975),NA)
 bdata<-data.frame(betas,namen,min_ci,max_ci,order,bcolour,group=1)
 
-
-p1<-ggplot(bdata, width=10,aes(x=reorder(namen,order),y=betas,ymax=max_ci,ymin=min_ci))+geom_bar(stat="identity",fill=bcolour)+ geom_linerange(colour="black")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1))+scale_colour_grey()+xlab("R² = 0.45") +ylab("% erklärte Varianz") + scale_y_continuous(limits=c(0, 0.6))
+r2<-round(summary(model.lag.1)$r.squared,2)
+p1<-ggplot(bdata, width=10,aes(x=reorder(namen,order),y=betas,ymax=max_ci,ymin=min_ci))+geom_bar(stat="identity",fill=bcolour)+ geom_linerange(colour="black")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1))+scale_colour_grey()+xlab(paste0("R² = ",r2)) +ylab("% erklärte Varianz") + scale_y_continuous(limits=c(0, 0.6))
 
 png("figure/lmg_mod1.png", width=600, heigh=450)
 print(p1)
