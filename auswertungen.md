@@ -99,7 +99,7 @@ verschiedene Typen von Kantonen:
 
 ```
 ## Error: Fehler bei der Auswertung des Argumentes 'obj' bei der Methodenauswahl
-## fÃ¼r Funktion 'spplot': Fehler: Objekt 'shp09' nicht gefunden
+## für Funktion 'spplot': Fehler: Objekt 'shp09' nicht gefunden
 ```
 
 
@@ -168,7 +168,7 @@ Brauchen wir das?
 
 ```
 ## Error: Fehler bei der Auswertung des Argumentes 'object' bei der Methodenauswahl
-## fÃ¼r Funktion 'summary': Fehler: Objekt 'fit.canton' nicht gefunden
+## für Funktion 'summary': Fehler: Objekt 'fit.canton' nicht gefunden
 ```
 
 
@@ -179,7 +179,7 @@ Brauchen wir das?
 
 ```
 ## Error: Fehler bei der Auswertung des Argumentes 'object' bei der Methodenauswahl
-## fÃ¼r Funktion 'summary': Fehler: Objekt 'fit.sekt' nicht gefunden
+## für Funktion 'summary': Fehler: Objekt 'fit.sekt' nicht gefunden
 ```
 
 
@@ -188,7 +188,7 @@ Brauchen wir das?
 
 ```
 ## Error: Fehler bei der Auswertung des Argumentes 'object' bei der Methodenauswahl
-## fÃ¼r Funktion 'summary': Fehler: Objekt 'fit.sekt' nicht gefunden
+## für Funktion 'summary': Fehler: Objekt 'fit.sekt' nicht gefunden
 ```
 
 
@@ -202,7 +202,7 @@ Brauchen wir das?
 
 ```
 ## Error: Fehler bei der Auswertung des Argumentes 'object' bei der Methodenauswahl
-## fÃ¼r Funktion 'summary': Fehler: Objekt 'fit.time' nicht gefunden
+## für Funktion 'summary': Fehler: Objekt 'fit.time' nicht gefunden
 ```
 
 
@@ -267,7 +267,7 @@ Sonstige Hinweise:
 
 ```
 ## Error: Fehler bei der Auswertung des Argumentes 'object' bei der Methodenauswahl
-## fÃ¼r Funktion 'summary': Fehler: Objekt 'fit.full' nicht gefunden
+## für Funktion 'summary': Fehler: Objekt 'fit.full' nicht gefunden
 ```
 
 

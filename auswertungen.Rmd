@@ -152,7 +152,7 @@ ggplot(kdaten, aes(x=steuerperiode,y=G_steink))+geom_line(size=1)+facet_wrap(~ka
 ```{r vermoegensstatistik}
 library(ineq)
 vermoegen <- subset(read.dta("data/vermoegen20131023.dta"), kanton=="CH"&jahr==2010)
-einkommen <- subset(read.dta("data/steuerdaten20131024.dta"), kanton=="CH"&steuerperiode==2010)
+einkommen <- subset(read.dta("data/steuerdaten20131024.dta"), kanton=="CH"&steuerperiode==2010,fall="Normalfälle")
 
 lorenz_vermoegen <- Lc(vermoegen$rverm/vermoegen$anz_pflichtige,vermoegen$anz_pflichtige)
 
@@ -161,12 +161,12 @@ lorenz_einkommen  <- Lc(einkommen$steink/einkommen$anz_pflichtige,einkommen$anz_
 lorenz_vermoegen <- data.frame(lorenz_vermoegen$p, lorenz_vermoegen$L)
 lorenz_einkommen <- data.frame(lorenz_einkommen$p, lorenz_einkommen$L)
 lorenz_einkommen$Lorenzkurve="Einkommen"
-lorenz_vermoegen$Lorenzkurve="VermÃ¶gen"
+lorenz_vermoegen$Lorenzkurve="Vermögen"
 names(lorenz_vermoegen)<- c("p","L","Lorenzkurve")
 names(lorenz_einkommen)<- c("p","L","Lorenzkurve")
 lorenzdata <- rbind(lorenz_vermoegen, lorenz_einkommen)
 
-ggplot(lorenzdata, aes(x=p,y=L,colour=Lorenzkurve)) + geom_line(size=2) + geom_segment(y=0, x=0,yend=1,xend=1,colour="black")+theme_bw()+scale_colour_grey(name="")+  geom_segment(y=0, x=0,yend=0,xend=1,colour="black")+  geom_segment(y=0, x=1,yend=1,xend=1,colour="black")+annotate("text",label="Gleichverteilung",x=0.55,y=0.61,angle=36,size=5)+annotate("text",label="Gini=0.84",x=0.81,y=0.21,angle=40,size=5)+annotate("text",label="Gini=0.36",x=0.64,y=0.46,angle=36,size=5)+ylab("Anteil am Gesamten")+xlab("BevÃ¶lkerung")
+ggplot(lorenzdata, aes(x=p,y=L,colour=Lorenzkurve)) + geom_line(size=2) + geom_segment(y=0, x=0,yend=1,xend=1,colour="black")+theme_bw()+scale_colour_grey(name="")+  geom_segment(y=0, x=0,yend=0,xend=1,colour="black")+  geom_segment(y=0, x=1,yend=1,xend=1,colour="black")+annotate("text",label="Gleichverteilung",x=0.55,y=0.61,angle=36,size=5)+annotate("text",label="Gini=84.4",x=0.81,y=0.21,angle=40,size=5)+annotate("text",label="Gini=35.6",x=0.64,y=0.46,angle=36,size=5)+ylab("Anteil am Gesamten")+xlab("Steuersubjekte")+scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1),labels=c("","Q1","Q2","Q3","Q4","Q5"))+scale_y_continuous(labels=c("0%","25%","50%","75%","100%"))
 ```
 
 # Schweizkarte nach Durhschnittseinkommen
