@@ -41,8 +41,8 @@ g1
 ##
 # Grafik als pdf speichern
 
-png("figure/incwea2010.png",
-    width=800, height=600)
+pdf("figure/incwea2010.pdf",
+    width=8, height=6)
 g1
 dev.off()
 

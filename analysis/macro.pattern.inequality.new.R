@@ -81,9 +81,9 @@ gini<-ggplot(macro, aes(x=Year,y=Gini))+
   geom_line(aes(x=Year,y=Gini),linetype="dotted",subset2) +
   xlab("Jahr") +
   scale_x_continuous(breaks=number_ticks(10)) +
-  annotate("text", x = 1955, y = 31, label = "Min Gini=30.9",size=5) +
+  annotate("text", x = 1958, y = 31, label = "Min Gini=30.9",size=5) +
   #scale_y_continuous(limits=c(0,40)) +
-  annotate("text", x = 1977, y = 36, label = "Max Gini=35.9",size=5) +
+  annotate("text", x = 1980, y = 36, label = "Max Gini=35.9",size=5) +
   theme_bw()+geom_vline(x=1972, linetype=2)+geom_vline(x=1994, linetype=2)
 gini<-gini + ggtitle("Einkommensungleichheit") + theme(text=element_text(size=20))
 #gini
@@ -203,12 +203,12 @@ gg.sa<-ggplot(macro, aes(x=Year,y=sozialausgaben))+
 # g.sa
 
 for(abbildung in c("gini","bip","g.mdp.smooth","g.sq")) {
-png(paste0("figure/",abbildung,".png"), width=800, heigh=600)
+pdf(paste0("figure/",abbildung,".pdf"), width=8, heigh=6)
 print(get(abbildung))
 dev.off()
 }
 
-png("figure/gg.sq.png", width=800, heigh=600)
+pdf("figure/gg.sq.pdf", width=8, heigh=6)
 # combination of Sozialexpenditure plots
 gg.sq
 print(gg.sa,vp=viewport(.8, .3, .3, .3))
@@ -368,6 +368,12 @@ dwtest(model.fd)
 library(dyn)
 model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1),macro)
 summary(model.lag.1)
+
+# Modell ohne Interpolation
+macro2<-macro[!macro$Year %in% seq(1952,1994,2),]
+model.lag.konservativ<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1),macro2)
+summary(model.lag.konservativ)
+
 dwtest(model.lag)
 model.lag.2<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g),macro)
 summary(model.lag.2)
@@ -402,7 +408,7 @@ bdata<-data.frame(betas,namen,min_ci,max_ci,order,bcolour,group=1)
 r2<-round(summary(model.lag.1)$r.squared,2)
 p1<-ggplot(bdata, width=10,aes(x=reorder(namen,order),y=betas,ymax=max_ci,ymin=min_ci))+geom_bar(stat="identity",fill=bcolour)+ geom_linerange(colour="black")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1))+scale_colour_grey()+xlab(paste0("R² = ",r2)) +ylab("% erklärte Varianz") + scale_y_continuous(limits=c(0, 0.6))
 
-png("figure/lmg_mod1.png", width=600, heigh=450)
+pdf("figure/lmg_mod1.pdf", width=6, heigh=4.5)
 print(p1)
 dev.off()
 

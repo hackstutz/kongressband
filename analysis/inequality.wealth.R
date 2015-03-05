@@ -30,7 +30,7 @@ number_ticks <- function(n) {function(limits) pretty(limits, n)}
 
 ##
 # Visualize
-
+pdf("figure/wealth.pdf", width=8, height=6)
 ggplot(wealth, aes(x=year,y=Gini))+
   geom_line(aes(x=year,y=Gini))+
   geom_point(aes(x=year,y=Gini),size=3.5)+
@@ -39,5 +39,6 @@ ggplot(wealth, aes(x=year,y=Gini))+
   ylab("Gini") +
   scale_y_continuous(limits=c(82,85)) +
   theme_bw()
+dev.off()
 
 

@@ -4,7 +4,7 @@
 
 ```{r options, results='hide',echo=FALSE}
 library(knitr)
-opts_chunk$set(out.width = '800px', dev='png', out.height = '500px',fig.width=10,fig.height=6.25,cache=TRUE, echo=FALSE, warning=FALSE)
+opts_chunk$set(out.width = '800px', dev='pdf', out.height = '500px',fig.width=10,fig.height=6.25,cache=TRUE, echo=FALSE, warning=FALSE)
 ```
 
 
@@ -101,10 +101,15 @@ rankdata$aenderung <- ifelse(rankdata$G_steink_ende<rankdata$G_steink,"Abnahme",
 ggplot(data=rankdata, aes(y=G_steink,ymin=G_steink, ymax=G_steink_ende, x = reorder(kanton,G_steink),color=aenderung)) + geom_pointrange(size=1) + scale_x_discrete('') + scale_y_continuous("Gini") + theme_bw()+scale_colour_grey()+ guides(color=guide_legend(title="Änderung"))+coord_cartesian(ylim=c(21, 51))+ggtitle(paste("Änderung des Gini zwischen",start,"und",ende))
 }
 
-rankplot(1950,1971)
-rankplot(1971,1991)
-rankplot(1991,2006)
-rankplot(2006,2010)
+rp5071 <- rankplot(1950,1971)
+rp7191 <- rankplot(1971,1991)
+rp9106 <- rankplot(1991,2006)
+rp0610 <- rankplot(2006,2010)
+
+library(gridExtra)
+pdf("figure/rankplots.pdf", width=16, height=10)
+grid.arrange(rp5071, rp7191, rp9106,rp0610, ncol=2,nrow=2)
+dev.off()
 ```
 
 Für die erste betrachtete Periode von 1950 bis 1971 (letzte Steuerperiode vor der Ölkrise) ergibt sich ein Bild von überwiegend zunehmender Ungleichheit. Stimmig scheint aber auch eine Interpretation als Konvergenz: Kantone mit besonders niedriger Ungleichheit haben überproportional zugelegt. Gleichzeitig ist Basel-Stadt als ungleichster Kanton wieder zurück auf Rang 5. Für diese Periode müssen die Erklärungen vorwiegend in der wirtschaftlichen Entwicklung gesucht werden (der Ausbau des Sozialstaats kam später). Denkbar wäre eine Angleichung der Sektorenzusammensetzung in dieser Zeit. Für die Periode von 1971 bis 1991 (noch vor der Strukturkrise) zeigt sich primär der Einfluss des Steuerwetttbewerbs. So nahm die Ungleichheit insbesondere in den Kantonen Schwyz, Zug, Uri, Appenzell Innerrhoden zu. Für die Periode von 1991 bis 2006 (vor der Finanzkrise) zeigt sich ebenfalls ein Bild das durch den Steuerwettbewerb dominiert ist. So hat die Ungleichheit in Obwalden, Nidwalden, Schwyz und Zug weiter zugenommen, Uri jedoch scheint im Laufe des Wettbewerbs wieder "zu verlieren". Für den letzten Beobachtungszweitraum von 2006 bis 2010 welcher die Finanzkrise einschliesst zeigt sich kein besonders auffälliges Bild. Die Levels der Kantone sind über diese Zeit bemerkenswert stabil geblieben. Insgesamt lässt sich sagen, dass die Betrachtung auf kantonaler Ebene das eindrückliche Ausmass des Steuerwettbewerbs aufzeigt, wohingegen die gesamtschweizerische Betrachtung die Kräfte des Steuerwettbewerbs gänzlich übersieht.
@@ -152,7 +157,7 @@ ggplot(kdaten, aes(x=steuerperiode,y=G_steink))+geom_line(size=1)+facet_wrap(~ka
 ```{r vermoegensstatistik}
 library(ineq)
 vermoegen <- subset(read.dta("data/vermoegen20131023.dta"), kanton=="CH"&jahr==2010)
-einkommen <- subset(read.dta("data/steuerdaten20131024.dta"), kanton=="CH"&steuerperiode==2010,fall="Normalf�lle")
+einkommen <- subset(read.dta("data/steuerdaten20131024.dta"), kanton=="CH"&steuerperiode==2010,fall="Normalfälle")
 
 lorenz_vermoegen <- Lc(vermoegen$rverm/vermoegen$anz_pflichtige,vermoegen$anz_pflichtige)
 
@@ -161,12 +166,18 @@ lorenz_einkommen  <- Lc(einkommen$steink/einkommen$anz_pflichtige,einkommen$anz_
 lorenz_vermoegen <- data.frame(lorenz_vermoegen$p, lorenz_vermoegen$L)
 lorenz_einkommen <- data.frame(lorenz_einkommen$p, lorenz_einkommen$L)
 lorenz_einkommen$Lorenzkurve="Einkommen"
-lorenz_vermoegen$Lorenzkurve="Verm�gen"
+lorenz_vermoegen$Lorenzkurve="Vermögen"
 names(lorenz_vermoegen)<- c("p","L","Lorenzkurve")
 names(lorenz_einkommen)<- c("p","L","Lorenzkurve")
 lorenzdata <- rbind(lorenz_vermoegen, lorenz_einkommen)
 
-ggplot(lorenzdata, aes(x=p,y=L,colour=Lorenzkurve)) + geom_line(size=2) + geom_segment(y=0, x=0,yend=1,xend=1,colour="black")+theme_bw()+scale_colour_grey(name="")+  geom_segment(y=0, x=0,yend=0,xend=1,colour="black")+  geom_segment(y=0, x=1,yend=1,xend=1,colour="black")+annotate("text",label="Gleichverteilung",x=0.55,y=0.61,angle=36,size=5)+annotate("text",label="Gini=84.4",x=0.81,y=0.21,angle=40,size=5)+annotate("text",label="Gini=35.6",x=0.64,y=0.46,angle=36,size=5)+ylab("Anteil am Gesamten")+xlab("Steuersubjekte")+scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1),labels=c("","Q1","Q2","Q3","Q4","Q5"))+scale_y_continuous(labels=c("0%","25%","50%","75%","100%"))
+lorenzplot <- ggplot(lorenzdata, aes(x=p,y=L,colour=Lorenzkurve)) + geom_line(size=2) + geom_segment(y=0, x=0,yend=1,xend=1,colour="black")+theme_bw()+scale_colour_grey(name="")+  geom_segment(y=0, x=0,yend=0,xend=1,colour="black")+  geom_segment(y=0, x=1,yend=1,xend=1,colour="black")+annotate("text",label="Gleichverteilung",x=0.55,y=0.61,angle=36,size=5)+annotate("text",label="Gini=84.4",x=0.81,y=0.21,angle=40,size=5)+annotate("text",label="Gini=35.6",x=0.64,y=0.46,angle=36,size=5)+ylab("Anteil am Gesamten")+xlab("Steuersubjekte")+scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1),labels=c("","Q1","Q2","Q3","Q4","Q5"))+scale_y_continuous(labels=c("0%","25%","50%","75%","100%"))
+lorenzplot
+
+pdf("figure/lorenzplot.pdf", width=10, height=6.25)
+print(lorenzplot)
+dev.off()
+
 ```
 
 # Schweizkarte nach Durhschnittseinkommen
@@ -202,7 +213,9 @@ SEE <- readShapeSpatial("shapefiles/G3S09.shp") #Seegrenzen
 
 shp09$cuts <- daten09$cuts[match(shp09$GMDE, daten09$Gemeindenr)]
 
+pdf("figure/schweizkarte.pdf",width=10, height=6.25)
 print(spplot(shp09, "cuts", col.regions = farben, main=list(label="durchschnittliches steuerbares Einkommen 2009 in 1000 CHF"), par.settings = list(axis.line=list(col=NA))) + layer(sp.polygons(KA, lwd=2, col="#dddddd")) + layer(sp.polygons(SEE, fill="#eeeeee")))
+dev.off()
 ```
 
 Die Darstellung der Einkommen auf Gemeindeebene in einer Karte liefert noch einige weitere Informationen zum Gesamtbild die aus den deskriptiven Statistiken der Kantone und den Regressionsmodellen nicht direkt ersichtlich sind. Zum einen ist zu sehen, dass es ein relativ starkes Stadt-Land-Gefälle gibt, bzw. dass das Einkommen stark von der Bevölkerungsdichte getrieben ist. Beispielsweise kann man sehen, dass die Kantone Bern und Tessin, die bezüglich ihres Durchschnittseinkommens eher in der unteren Hälfte rangieren, grössere zusammenhängende Landstriche mit hohem Einkommen besitzen. Waadt und Zürich fallen dagegen durch eine homogen hohe Bevölkerungsdichte und die Abwesenheit von grösseren ländlichen Gebieten ins obere Drittel des Einkommensrankings. Jura, Schwyz, Zug und Nidwalden bilden die wenigen Ausnahmen. Während im Jura das Einkommen in Relation zur Bevölkerungdichte eher niedrig ist stechen die ländlichen Kantone Schwyz, Nidwalden und Zug durch den Steuerwettbewerb mit hohen Einkommen hervor. Ein Grossteil des Durchschnittseinkommens lässt sich also womöglich durch die Entwicklung der Bevölkerungsdichte (z.B. aufgrund von Geografischen Begebenheiten wie die Nähe zu Seen und die Abwesenheit von Bergen) zurückführen.
