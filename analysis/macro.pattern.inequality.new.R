@@ -250,6 +250,8 @@ print(get(abbildung))
 dev.off()
 }
 
+
+
 pdf("figure/gg.sq.pdf", width=8, heigh=6)
 # combination of Sozialexpenditure plots
 gg.sq
@@ -438,6 +440,10 @@ summary(model.lag.1)
 model.lag.konservativ<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),1),macro2)
 summary(model.lag.konservativ)
 
+model.lag.konservativ.2<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g),macro2)
+summary(model.lag.konservativ.2)
+
+
 dwtest(model.lag)
 model.lag.2<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1)+ts(HHp1.g)+ts(uniondensity.g),macro)
 summary(model.lag.2)
@@ -459,7 +465,7 @@ anova(model.lag.test,model.lag)
 library(relaimpo)
 set.seed(999)
 # Bootstrap Measures of Relative Importance (1000 samples)
-boot <- boot.relimp(model.lag.1, b = 1000, type = "lmg", rank = TRUE)
+boot <- boot.relimp(model.lag.konservativ, b = 1000, type = "lmg", rank = TRUE)
 namen <- c("Sozialausgaben","GDP","Ausländeranteil","Altersquotient","Gini t-1","Unerklärte Varianz")
 betas <- boot@boot$t0[4:8]
 betas <-c(betas,1-sum(betas))
