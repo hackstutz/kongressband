@@ -15,6 +15,7 @@ library(plyr)
 library(sjPlot)
 library(grid)
 library(texreg)
+library(dplyr)
 #library(devtools)
 #install_github("rCharts","ramnathv")
 #library(rCharts)
@@ -23,6 +24,9 @@ library(texreg)
 # load functions
 number_ticks <- function(n) {function(limits) pretty(limits, n)}
 growth<-function(x) c(NA,diff(log(x))*100)
+means<-function(a){
+  (a+lead(a))/2
+}
 
 ##
 # Prepare data
@@ -32,9 +36,19 @@ growth<-function(x) c(NA,diff(log(x))*100)
 #macrodata<-read.table("data/Macro_indicators_gini.csv", header = TRUE, sep = ";")
 macrodata<-read.csv("data/Macro_indicators_gini20140409.csv", header = TRUE, sep = ";",dec=",")
 
-
 # Restrict dataset to 1950-2010
 macro<-subset(macrodata,Year>1949)
+
+# Conservative dataset (nothing imputed), UV are averaged
+macro2<-macro[,c(1,2,5,8,12,13,15)]
+macro2[macro2$Year<1995&macro2$Year>1950,c(2:7)]<-macro2[macro2$Year<1995&macro2$Year>1950,]%>%
+  mutate_each(funs(means(.)))%>%
+  select(-Year) 
+macro2<-macro2[!macro2$Year %in% seq(1952,1994,2),]
+macro2<-macro2[!is.na(macro2$Gini),]
+macro.g<-sapply(macro2[,c(2:7)],FUN=growth)
+colnames(macro.g)<-paste(colnames(macro.g),".g",sep="")
+macro2<-cbind(macro2,macro.g)
 
 # Correct Gini
 macro$Gini <- macro$Gini
@@ -60,13 +74,7 @@ macro<-cbind(macro,macro.g)
 macro$mdp<-macro$mdp/1000
 
 
-# Conservative dataset (nothing imputed)
-macro2<-macro[!macro$Year %in% seq(1951,1995,2),]
-macro2<-macro2[,c(1,2,5,8,12,13,15)]
-macro2<-macro2[!is.na(macro2$Gini),]
-macro.g<-sapply(macro2[,c(2:6)],FUN=growth)
-colnames(macro.g)<-paste(colnames(macro.g),".g",sep="")
-macro2<-cbind(macro3,macro.g)
+
 
 
 ###
@@ -125,7 +133,7 @@ g.mdp
 
 
 # Smooth line
-
+r<-cor.test(x=macro$Gini.g,y=macro$mdp.g,use="complete.obs",method="pearson")
 g.mdp.smooth<-ggplot(macro,aes(x=mdp.g,y=Gini.g)) +
   geom_point(shape=1)+ 
   geom_smooth(method="loess",colour="black") +
@@ -138,6 +146,7 @@ g.mdp.smooth
 
 
 # Conservativ
+r<-cor.test(x=macro2$Gini.g,y=macro2$mdp.g,use="complete.obs",method="pearson")
 g.mdp.smooth<-ggplot(macro2,aes(x=mdp.g,y=Gini.g)) +
   geom_point(shape=1)+ 
   geom_smooth(method="loess",colour="black") +
@@ -166,7 +175,7 @@ gg.sq<-ggplot(macro, aes(x=Year,y=sozialquote))+
 gg.sq<-gg.sq + ggtitle("Soziale Sicherheit")+ theme(text=element_text(size=20))+geom_vline(x=1972, linetype=2)+geom_vline(x=1994, linetype=2)
 gg.sq
 
-
+r<-cor.test(x=macro$Gini.g,y=macro$sozialquote.g,use="complete.obs",method="pearson")
 g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
   geom_point(shape=1)+ 
   geom_smooth(method=lm,colour="black") +
@@ -191,6 +200,7 @@ g.sq
 
 
 # Conservativ
+r<-cor.test(x=macro2$Gini.g,y=macro2$sozialquote.g,use="complete.obs",method="pearson")
 g.sq<-ggplot(macro2,aes(x=sozialquote.g,y=Gini.g)) +
   geom_point(shape=1)+ 
   geom_smooth(method="loess",colour="black") +
@@ -367,6 +377,13 @@ cor(x=macro$mdp.g,y=macro[,c(19:33)],use="pairwise.complete.obs",method="pearson
 # Imputiert
 x<-cor(x=macro2$Gini.g,y=macro2[,c("sozialausgaben.g","mdp.g","foreigner_3.g","altersquotient_3.g")],use="pairwise.complete.obs",method="pearson")
 
+
+cor.test(x=macro$Gini.g,y=macro$sozialausgaben.g,use="pairwise.complete.obs",method="pearson")
+cor.test(x=macro$Gini.g,y=macro$sozialquote.g,use="pairwise.complete.obs",method="pearson")
+cor.test(x=macro$Gini.g,y=macro$mdp.g,use="pairwise.complete.obs",method="pearson")
+cor.test(x=macro$Gini.g,y=macro$foreigner_3.g,use="pairwise.complete.obs",method="pearson")
+cor.test(x=macro$Gini.g,y=macro$altersquotient_3.g,use="pairwise.complete.obs",method="pearson")
+
 # Konservativ
 x<-cor(x=macro2$Gini.g,y=macro2[,c("sozialausgaben.g","mdp.g","foreigner_3.g","altersquotient_3.g")],use="pairwise.complete.obs",method="pearson")
 
@@ -408,12 +425,11 @@ dwtest(model.fd)
 
 # simple model with lag
 library(dyn)
-model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1),macro)
+model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),1),macro)
 summary(model.lag.1)
 
 # Modell ohne Interpolation
-
-model.lag.konservativ<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1),macro2)
+model.lag.konservativ<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),1),macro2)
 summary(model.lag.konservativ)
 
 dwtest(model.lag)
