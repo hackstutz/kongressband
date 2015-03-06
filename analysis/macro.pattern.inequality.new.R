@@ -15,6 +15,7 @@ library(plyr)
 library(sjPlot)
 library(grid)
 library(texreg)
+library(xtable)
 library(dplyr)
 #library(devtools)
 #install_github("rCharts","ramnathv")
@@ -384,6 +385,8 @@ cor.test(x=macro$Gini.g,y=macro$mdp.g,use="pairwise.complete.obs",method="pearso
 cor.test(x=macro$Gini.g,y=macro$foreigner_3.g,use="pairwise.complete.obs",method="pearson")
 cor.test(x=macro$Gini.g,y=macro$altersquotient_3.g,use="pairwise.complete.obs",method="pearson")
 
+corstarsl(macro[,c("Gini.g","sozialausgaben.g","sozialquote.g","mdp.g","foreigner_3.g","altersquotient_3.g")])
+
 # Konservativ
 x<-cor(x=macro2$Gini.g,y=macro2[,c("sozialausgaben.g","mdp.g","foreigner_3.g","altersquotient_3.g")],use="pairwise.complete.obs",method="pearson")
 
@@ -392,6 +395,9 @@ cor.test(x=macro2$Gini.g,y=macro2$sozialquote.g,use="pairwise.complete.obs",meth
 cor.test(x=macro2$Gini.g,y=macro2$mdp.g,use="pairwise.complete.obs",method="pearson")
 cor.test(x=macro2$Gini.g,y=macro2$foreigner_3.g,use="pairwise.complete.obs",method="pearson")
 cor.test(x=macro2$Gini.g,y=macro2$altersquotient_3.g,use="pairwise.complete.obs",method="pearson")
+
+corstarsl(macro2[,c("Gini.g","sozialausgaben.g","sozialquote.g","mdp.g","foreigner_3.g","altersquotient_3.g")])
+
 
 htmlreg(x,booktabs=FALSE, dcolum= FALSE, file= "test")
 
@@ -463,7 +469,7 @@ min_ci <- c(sapply(data.frame(boot@boot$t[,4:8]),quantile,0.025),NA)
 max_ci <- c(sapply(data.frame(boot@boot$t[,4:8]),quantile,0.975),NA)
 bdata<-data.frame(betas,namen,min_ci,max_ci,order,bcolour,group=1)
 
-r2<-round(summary(model.lag.1)$r.squared,2)
+r2<-round(summary(model.lag.konservativ)$r.squared,2)
 p1<-ggplot(bdata, width=10,aes(x=reorder(namen,order),y=betas,ymax=max_ci,ymin=min_ci))+geom_bar(stat="identity",fill=bcolour)+ geom_linerange(colour="black")+theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1))+scale_colour_grey()+xlab(paste0("R² = ",r2)) +ylab("% erklärte Varianz") + scale_y_continuous(limits=c(0, 0.6))
 
 pdf("figure/lmg_mod1.pdf", width=6, heigh=4.5)
