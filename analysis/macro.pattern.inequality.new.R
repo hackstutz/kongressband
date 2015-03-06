@@ -49,7 +49,6 @@ macrodata<- na.approx(macrodataZoo)
 macro<-data.frame(macrodata)
 
 
-
 # Adding variables wiht change rates
 colnames(macro)[which(colnames(macro) == 'mdp.g')] <- 'Mdp.g'
 macro.g<-sapply(macro[,c(2:18)],FUN=growth)
@@ -59,6 +58,15 @@ macro<-cbind(macro,macro.g)
 # Change scale of BIP (for graphical reason)
 
 macro$mdp<-macro$mdp/1000
+
+
+# Conservative dataset (nothing imputed)
+macro2<-macro[!macro$Year %in% seq(1951,1995,2),]
+macro2<-macro2[,c(1,2,5,8,12,13,15)]
+macro2<-macro2[!is.na(macro2$Gini),]
+macro.g<-sapply(macro2[,c(2:6)],FUN=growth)
+colnames(macro.g)<-paste(colnames(macro.g),".g",sep="")
+macro2<-cbind(macro3,macro.g)
 
 
 ###
@@ -86,7 +94,7 @@ gini<-ggplot(macro, aes(x=Year,y=Gini))+
   annotate("text", x = 1980, y = 36, label = "Max Gini=35.9",size=5) +
   theme_bw()+geom_vline(x=1972, linetype=2)+geom_vline(x=1994, linetype=2)
 gini<-gini + ggtitle("Einkommensungleichheit") + theme(text=element_text(size=20))
-#gini
+gini
 
 
 # Wirtschaftswachstum
@@ -101,7 +109,7 @@ bip<-ggplot(macro, aes(x=Year,y=mdp))+
   annotate("text", x = 1990, y = 22, label = "Strukturkrise der 90er",size=5) +
   annotate("text", x = 2008, y = 26, label = "Finanzkrise",size=5)
 bip<-bip + ggtitle("Wirtschaftswachstum") + theme(text=element_text(size=20))+geom_vline(x=1972, linetype=2)+geom_vline(x=1994, linetype=2)
-#bip
+bip
 
 r<-cor.test(x=macro$Gini.g,y=macro$mdp.g,use="complete.obs",method="pearson")
 g.mdp<-ggplot(macro,aes(x=mdp.g,y=Gini.g)) +
@@ -112,7 +120,7 @@ g.mdp<-ggplot(macro,aes(x=mdp.g,y=Gini.g)) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Wirtschaftswachstum (in Prozent)") 
 g.mdp<-g.mdp + theme(text=element_text(size=20))
-#g.mdp
+g.mdp
 
 
 
@@ -126,7 +134,19 @@ g.mdp.smooth<-ggplot(macro,aes(x=mdp.g,y=Gini.g)) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Wirtschaftswachstum (in Prozent)") 
 g.mdp.smooth<-g.mdp.smooth + theme(text=element_text(size=20))
-#g.mdp.smooth
+g.mdp.smooth
+
+
+# Conservativ
+g.mdp.smooth<-ggplot(macro2,aes(x=mdp.g,y=Gini.g)) +
+  geom_point(shape=1)+ 
+  geom_smooth(method="loess",colour="black") +
+  theme_bw() + 
+  annotate("text", x = -4, y = 2, label = paste("r=",round(r$estimate,2)),size=5) +
+  ylab("Veränderung Gini (in Prozent)") + 
+  xlab("Wirtschaftswachstum (in Prozent)") 
+g.mdp.smooth<-g.mdp.smooth + theme(text=element_text(size=20))
+g.mdp.smooth
 
 
 
@@ -144,7 +164,7 @@ gg.sq<-ggplot(macro, aes(x=Year,y=sozialquote))+
   annotate("text", x = 1972, y = 19, label = "Erhöhung AHV-Renten",size=5) +
   annotate("text", x = 2002, y = 22, label = "Reaktion auf Strukturkrise",size=5)
 gg.sq<-gg.sq + ggtitle("Soziale Sicherheit")+ theme(text=element_text(size=20))+geom_vline(x=1972, linetype=2)+geom_vline(x=1994, linetype=2)
-#gg.sq
+gg.sq
 
 
 g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
@@ -155,10 +175,10 @@ g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung der Sozialquote (in Prozent)") 
 g.sq<-g.sq+ theme(text=element_text(size=20))
-#g.sq
+g.sq
 
 
-
+# With lokaler Anpassung
 g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
   geom_point(shape=1)+ 
   geom_smooth(method="loess",colour="black") +
@@ -167,8 +187,19 @@ g.sq<-ggplot(macro,aes(x=sozialquote.g,y=Gini.g)) +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung der Sozialquote (in Prozent)") 
 g.sq<-g.sq+ theme(text=element_text(size=20))
-#g.sq
+g.sq
 
+
+# Conservativ
+g.sq<-ggplot(macro2,aes(x=sozialquote.g,y=Gini.g)) +
+  geom_point(shape=1)+ 
+  geom_smooth(method="loess",colour="black") +
+  theme_bw() + 
+  annotate("text", x = 12, y = 1.5, label = paste("r=",round(r$estimate,2))) +
+  ylab("Veränderung Gini (in Prozent)") + 
+  xlab("Veränderung der Sozialquote (in Prozent)") 
+g.sq<-g.sq+ theme(text=element_text(size=20))
+g.sq
 
 
 ##
@@ -180,7 +211,7 @@ gg.sa<-ggplot(macro, aes(x=Year,y=sozialausgaben))+
   scale_x_continuous(breaks=number_ticks(3))+
   ylab("Sozialausgaben") +
   theme_bw()
-#gg.sa
+gg.sa
 # 
 # g.sa<-ggplot(macro,aes(x=sozialausgaben.g,y=Gini.g)) +
 #   geom_point(shape=1)+ 
@@ -239,7 +270,7 @@ g.hhp1<-ggplot(macro,aes(x=HHp1.g,y=Gini.g)) +
   annotate("text", x = 0.5, y = 2.5, label = "r=-0.04") +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung Anteil 1-Personen HH (in Prozent)") 
-#g.hhp1
+g.hhp1
 
 r<-cor.test(x=macro$Gini.g,y=macro$HHp1.g,use="complete.obs",method="pearson")
 r
@@ -264,7 +295,7 @@ g.f<-ggplot(macro,aes(x=foreigner.g,y=Gini.g)) +
   annotate("text", x = 0.5, y = 2.5, label = "r=-0.22") +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung Ausländeranteil(in Prozent)") 
-#g.f
+g.f
 
 g.f<-ggplot(macro,aes(x=foreigner.g,y=Gini.g)) +
   geom_point(shape=1)+ 
@@ -273,7 +304,7 @@ g.f<-ggplot(macro,aes(x=foreigner.g,y=Gini.g)) +
   annotate("text", x = 0.5, y = 2.5, label = "r=-0.22") +
   ylab("Veränderung Gini (in Prozent)") + 
   xlab("Veränderung Ausländeranteil(in Prozent)") 
-#g.f
+g.f
 
 r<-cor.test(x=macro$Gini.g,y=macro$foreigner.g,use="complete.obs",method="pearson")
 r
@@ -332,7 +363,18 @@ par(mfrow = c(1,1))
 
 cor(x=macro$mdp.g,y=macro[,c(19:33)],use="pairwise.complete.obs",method="pearson")
 
-x<-cor(x=macro$Gini.g,y=macro[,c("sozialquote.g","mdp.g","foreigner.g","HHp1.g")],use="pairwise.complete.obs",method="pearson")
+
+# Imputiert
+x<-cor(x=macro2$Gini.g,y=macro2[,c("sozialausgaben.g","mdp.g","foreigner_3.g","altersquotient_3.g")],use="pairwise.complete.obs",method="pearson")
+
+# Konservativ
+x<-cor(x=macro2$Gini.g,y=macro2[,c("sozialausgaben.g","mdp.g","foreigner_3.g","altersquotient_3.g")],use="pairwise.complete.obs",method="pearson")
+
+cor.test(x=macro2$Gini.g,y=macro2$sozialausgaben.g,use="pairwise.complete.obs",method="pearson")
+cor.test(x=macro2$Gini.g,y=macro2$sozialquote.g,use="pairwise.complete.obs",method="pearson")
+cor.test(x=macro2$Gini.g,y=macro2$mdp.g,use="pairwise.complete.obs",method="pearson")
+cor.test(x=macro2$Gini.g,y=macro2$foreigner_3.g,use="pairwise.complete.obs",method="pearson")
+cor.test(x=macro2$Gini.g,y=macro2$altersquotient_3.g,use="pairwise.complete.obs",method="pearson")
 
 htmlreg(x,booktabs=FALSE, dcolum= FALSE, file= "test")
 
@@ -370,7 +412,7 @@ model.lag.1<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g
 summary(model.lag.1)
 
 # Modell ohne Interpolation
-macro2<-macro[!macro$Year %in% seq(1952,1994,2),]
+
 model.lag.konservativ<-dyn$lm(ts(Gini.g)~1+ts(sozialausgaben.g)+ts(mdp.g)+ts(foreigner_3.g)+ts(altersquotient_3.g)+lag(ts(Gini.g),-1),macro2)
 summary(model.lag.konservativ)
 
